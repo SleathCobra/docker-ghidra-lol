@@ -4,7 +4,6 @@ on:
   push:
     branches: [master]
 
-# These permissions are crucial for pushing to GHCR
 permissions:
   contents: read
   packages: write
@@ -14,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Convert owner to lowercase
+        id: vars
+        run: |
+          echo "LOWER_OWNER=${OWNER,,}" >> $GITHUB_OUTPUT
+        env:
+          OWNER: ${{ github.repository_owner }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -28,5 +34,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ghidra-server:latest
-            ghcr.io/${{ github.repository_owner }}/ghidra-server:${{ github.sha }}
+            ghcr.io/${{ steps.vars.outputs.LOWER_OWNER }}/ghidra-server:latest
+            ghcr.io/${{ steps.vars.outputs.LOWER_OWNER }}/ghidra-server:${{ github.sha }}
