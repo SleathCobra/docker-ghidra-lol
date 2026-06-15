@@ -1,23 +1,32 @@
-name: Build image
+name: Build and Push to GHCR
 
 on:
   push:
-    branches: 
-      - master
+    branches: [master]
 
-env:
-  CARGO_TERM_COLOR: always
+# These permissions are crucial for pushing to GHCR
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-      - name: Build and publish to GHCR
-        uses: macbre/push-to-ghcr@master
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          image_name: sleathcobra/ghidra-server
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-  
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/ghidra-server:latest
+            ghcr.io/${{ github.repository_owner }}/ghidra-server:${{ github.sha }}
